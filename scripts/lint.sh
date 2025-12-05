@@ -2,6 +2,6 @@
 
 set -ex
 
-uv run mypy clios
-uv run ruff check clios tests examples
-uv run ruff format --check clios tests examples
+uv run mypy mkdocs_clios
+uv run ruff check mkdocs_clios tests
+uv run ruff format --check mkdocs_clios tests
