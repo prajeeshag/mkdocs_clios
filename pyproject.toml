@@ -25,7 +25,7 @@ repository = "https://github.com/prajeeshag/mkdocs_clios"
 documentation = "https://github.com/prajeeshag/mkdocs_clios"
 
 [project.entry-points."mkdocs.plugins"]
-mkkdocs_clios = "mkdocs_clios.plugin:CliosMkDocsPlugin"
+mkdocs_clios = "mkdocs_clios.plugin:CliosMkDocsPlugin"
 
 
 [tool.pdm.build]
