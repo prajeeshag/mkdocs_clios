@@ -1,0 +1,68 @@
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[project]
+name = "mkdocs_clios"
+dynamic = ["version"]
+description = "Mkdocs plugin for clios"
+authors = [{ name = "Prajeesh Ag", email = "prajeeshag@gmail.com" }]
+license = { file = "LICENSE" }
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = ["mkdocs>=1.6.1"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+
+[project.urls]
+homepage = "https://github.com/prajeeshag/mkdocs_clios"
+repository = "https://github.com/prajeeshag/mkdocs_clios"
+documentation = "https://github.com/prajeeshag/mkdocs_clios"
+
+[project.entry-points."mkdocs.plugins"]
+pluginname = "mkdocs_clios.plugin:CliosMkDocsPlugin"
+
+
+[tool.pdm.build]
+excludes = ["tests", "examples"]
+
+
+[tool.pdm.version]
+source = "scm"
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "examples"]
+
+[tool.commitizen]
+name = "cz_gitmoji"
+
+[dependency-groups]
+docs = ["mkdocs>=1.6.1", "mkdocs-material>=9.5.44"]
+dev = [
+    "clios>=0.5.0",
+    "mypy>=1.13.0",
+    "pytest>=8.3.3",
+    "pytest-cov>=6.0.0",
+    "pytest-mock>=3.14.0",
+    "pytest-sugar>=1.0.0",
+    "ruff>=0.8.0",
+]
+
+[tool.uv]
+default-groups = ["dev", "docs"]
+
+[tool.coverage.run]
+source = ["mkdocs_clios"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+
+[tool.ruff]
+lint.extend-select = ["T201"]
