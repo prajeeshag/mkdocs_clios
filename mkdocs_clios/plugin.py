@@ -3,15 +3,20 @@ import importlib
 import typing as t
 from pathlib import Path
 
+import mkdocs
 from clios import Clios
 from clios.core.main_parser import ParserAbc
 from clios.core.operator_fn import OperatorFn
 from mkdocs.config.defaults import MkDocsConfig
-from mkdocs.plugins import BasePlugin
 from mkdocs.structure.files import Files
 
 
-class CliosMkDocsPlugin(BasePlugin):  # type: ignore
+class CliosPluginConfig(mkdocs.config.base.Config):
+    app = mkdocs.config.config_options.Type(str)
+    output_dir = mkdocs.config.config_options.Type(str, default="operators")
+
+
+class CliosMkDocsPlugin(mkdocs.plugins.BasePlugin[CliosPluginConfig]):  # type: ignore
     """
     Auto-generate Markdown documentation for clios operators.
     """
@@ -24,7 +29,7 @@ class CliosMkDocsPlugin(BasePlugin):  # type: ignore
         self.app: Clios = getattr(module, attr)
         if not isinstance(self.app, Clios):
             raise ValueError("Invalid app: should be an instance of Clios")
-        self.output_dir = Path(config.docs_dir) / "operators"
+        self.output_dir = Path(config.docs_dir) / self.config["output_dir"]
         self.output_dir.mkdir(parents=True, exist_ok=True)
         return config
 

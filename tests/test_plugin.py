@@ -8,7 +8,7 @@ from mkdocs_clios.plugin import CliosMkDocsPlugin
 
 def test_invalid_app(tmp_path):
     plugin = CliosMkDocsPlugin()
-    plugin.config = {"app": "dummy.invalid_app:app"}
+    plugin.config = {"app": "dummy.invalid_app:app", "output_dir": "operators"}
     cfg = MkDocsConfig()
     cfg.load_dict({"docs_dir": str(tmp_path)})
     with pytest.raises(ValueError, match="Invalid app: should be an instance of Clios"):
@@ -17,7 +17,7 @@ def test_invalid_app(tmp_path):
 
 def test_on_files_generates_docs(tmp_path, monkeypatch):
     plugin = CliosMkDocsPlugin()
-    plugin.config = {"app": "dummy.app:app"}
+    plugin.config = {"app": "dummy.app:app", "output_dir": "operators"}
 
     cfg = MkDocsConfig()
     cfg.load_dict({"docs_dir": str(tmp_path)})
