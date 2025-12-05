@@ -47,7 +47,7 @@ class DummyParser:
                     "name": "a",
                     "type": "int",
                     "required": "yes",
-                    "default": "-",
+                    "default_value": "-",
                     "description": "first arg",
                     "choices": "-",
                 }
@@ -68,7 +68,7 @@ class DummyParserNoDetails:
                     "name": "a",
                     "type": "int",
                     "required": "yes",
-                    "default": "-",
+                    "default_value": "-",
                     "description": "first arg",
                     "choices": "-",
                 }
@@ -97,7 +97,9 @@ def test_render_markdown_for_operator():
     assert "## Description" in md
     assert "Short description" in md
     assert "Long description" in md
-    assert "| `a` | int | yes | -" in md
+    assert (
+        "| `a` | int | yes | first arg<br> (choices: -)<br> (default value: -) |" in md
+    )
     assert "## Examples" in md
     assert "xcdo add 1 2" in md
 
@@ -115,7 +117,9 @@ def test_render_markdown_for_operator_no_details():
     assert "## Description" not in md
     assert "Short description" not in md
     assert "Long description" not in md
-    assert "| `a` | int | yes | -" in md
+    assert (
+        "| `a` | int | yes | first arg<br> (choices: -)<br> (default value: -) |" in md
+    )
     assert "## Examples" not in md
     assert "xcdo add 1 2" not in md
 
@@ -126,12 +130,13 @@ def test_render_param_table():
             "name": "x",
             "type": "float",
             "required": "no",
-            "default": "1.0",
+            "default_value": "1.0",
             "description": "value",
             "choices": "-",
         }
     ]
 
     md = CliosMkDocsPlugin._render_param_table(rows)
-
-    assert "| `x` | float | no | 1.0 | value | - |" in md
+    assert (
+        "| `x` | float | no | value<br> (choices: -)<br> (default value: 1.0) |" in md
+    )

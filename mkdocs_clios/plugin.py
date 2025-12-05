@@ -98,12 +98,20 @@ class CliosMkDocsPlugin(BasePlugin):  # type: ignore
     # ------------------------------------------------------------------
     @staticmethod
     def _render_param_table(rows: list[dict[str, str]]) -> str:
-        header = "| Name | Type | Required | Default | Description | Choices |"
-        sep = "|------|------|----------|---------|-------------|---------|"
+        header = "| Name | Type | Required | Description |"
+        sep = "|------|------|----------|---------------------|"
         out = [header, sep]
+
         for r in rows:
+            default_value = r["default_value"]
+            choices = r["choices"]
+            description = r["description"]
+            if choices:
+                description += f"<br> (choices: {choices})"
+            if default_value:
+                description += f"<br> (default value: {default_value})"
+
             out.append(
-                f"| `{r['name']}` | {r['type']} | {r['required']} | {r['default']} "
-                f"| {r['description']} | {r['choices']} |"
+                f"| `{r['name']}` | {r['type']} | {r['required']} | {description} |"
             )
         return "\n".join(out)
