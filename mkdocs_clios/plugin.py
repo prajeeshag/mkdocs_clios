@@ -9,14 +9,13 @@ from clios.core.main_parser import ParserAbc
 from clios.core.operator_fn import OperatorFn
 from mkdocs.config.defaults import MkDocsConfig
 from mkdocs.structure import StructureItem
-from mkdocs.structure.files import Files
+from mkdocs.structure.files import File, Files
 from mkdocs.structure.nav import Section
 from mkdocs.structure.pages import Page
 
 
 class CliosPluginConfig(mkdocs.config.base.Config):
     app = mkdocs.config.config_options.Type(str)
-    output_dir = mkdocs.config.config_options.Type(str, default="operators")
 
 
 class CliosMkDocsPlugin(mkdocs.plugins.BasePlugin[CliosPluginConfig]):  # type: ignore
@@ -32,8 +31,6 @@ class CliosMkDocsPlugin(mkdocs.plugins.BasePlugin[CliosPluginConfig]):  # type: 
         self.app: Clios = getattr(module, attr)
         if not isinstance(self.app, Clios):
             raise ValueError("Invalid app: should be an instance of Clios")
-        self.output_dir = Path(config.docs_dir) / self.config["output_dir"]
-        self.output_dir.mkdir(parents=True, exist_ok=True)
         return config
 
     def on_files(self, files: Files, *, config: MkDocsConfig) -> Files:
@@ -41,17 +38,17 @@ class CliosMkDocsPlugin(mkdocs.plugins.BasePlugin[CliosPluginConfig]):  # type: 
         Called before MkDocs collects files.
         We generate .md files and let MkDocs see them as part of docs/.
         """
-        self._generate_operator_docs()
+        self._generate_operator_docs(files, config)
         return files
 
         # ---------------------------------------------------------------
 
     def on_nav(self, nav, config: MkDocsConfig, files: Files):
         """Insert the Operator tree into navigation."""
-        output_dir = self.config["output_dir"]
         operator_pages: list[StructureItem] = []
+
         for item in self._items:
-            file = files.get_file_from_path(f"{output_dir}/{item}.md")
+            file = files.get_file_from_path(f"operators/{item}.md")
             if file is None:
                 continue
             operator_pages.append(Page(item, file, config))
@@ -62,24 +59,58 @@ class CliosMkDocsPlugin(mkdocs.plugins.BasePlugin[CliosPluginConfig]):  # type: 
     # ------------------------------------------------------------------
     # Render markdown similar to print_detail()
     # ------------------------------------------------------------------
-    def _generate_operator_docs(self) -> None:
+    def _generate_operator_docs(self, files: Files, config: MkDocsConfig) -> None:
         parser = self.app._parser
         operators = self.app._operators
         self._items: list[str] = []
+
+        index_lines = []
+        index_lines.append("# Operators")
+        index_lines.append("")
+        index_lines.append("| Name | Description |")
+        index_lines.append("|------|-------------|")
+
+        cache_dir = ".mkdocs_clios_cache"
+        (Path(cache_dir) / "operators").mkdir(parents=True, exist_ok=True)
         for name, op_fn in operators.items():
-            md = self._render_markdown_for_operator(name, op_fn, parser)
-            path = self.output_dir / f"{name}.md"
+            md = self._render_markdown_for_operator(name, op_fn, parser, index_lines)
+            file_path = f"operators/{name}.md"
+            path = Path(cache_dir) / file_path
             self._items.append(name)
             path.write_text(md, encoding="utf-8")
             print(f"[cli-docs] Generated {path}")  # noqa T201
 
+            file = File(
+                path=file_path,
+                src_dir=cache_dir,
+                dest_dir=config.site_dir,
+                use_directory_urls=config.use_directory_urls,
+            )
+            files.append(file)
+
+        file_path = "operators/index.md"
+        index_path = Path(cache_dir) / file_path
+        index_path.write_text("\n".join(index_lines), encoding="utf-8")
+        self._items.insert(0, "index")
+        file = File(
+            path=file_path,
+            src_dir=cache_dir,
+            dest_dir=config.site_dir,
+            use_directory_urls=config.use_directory_urls,
+        )
+        files.append(file)
+
     # ------------------------------------------------------------------
     def _render_markdown_for_operator(
-        self, name: str, op_fn: OperatorFn, parser: ParserAbc
+        self, name: str, op_fn: OperatorFn, parser: ParserAbc, index_lines: list[str]
     ) -> str:
         synopsis, short, long, args_doc, kwds_doc = parser.get_details(
             name, op_fn, exe_name="xcdo"
         )
+
+        # Build index -----------------------------------------------
+        index_lines.append(f"| [{name}]({name}.md) | {short} |")
+
         # Build Markdown -----------------------------------------------
         out = []
         out.append(f"# `{name}`")
