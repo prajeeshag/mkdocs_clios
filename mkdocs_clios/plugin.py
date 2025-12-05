@@ -8,7 +8,10 @@ from clios import Clios
 from clios.core.main_parser import ParserAbc
 from clios.core.operator_fn import OperatorFn
 from mkdocs.config.defaults import MkDocsConfig
+from mkdocs.structure import StructureItem
 from mkdocs.structure.files import Files
+from mkdocs.structure.nav import Section
+from mkdocs.structure.pages import Page
 
 
 class CliosPluginConfig(mkdocs.config.base.Config):
@@ -41,16 +44,32 @@ class CliosMkDocsPlugin(mkdocs.plugins.BasePlugin[CliosPluginConfig]):  # type: 
         self._generate_operator_docs()
         return files
 
+        # ---------------------------------------------------------------
+
+    def on_nav(self, nav, config: MkDocsConfig, files: Files):
+        """Insert the Operator tree into navigation."""
+        output_dir = self.config["output_dir"]
+        operator_pages: list[StructureItem] = []
+        for item in self._items:
+            file = files.get_file_from_path(f"{output_dir}/{item}.md")
+            if file is None:
+                continue
+            operator_pages.append(Page(item, file, config))
+        something = Section("Operators", operator_pages)
+        nav.items.append(something)
+        return nav
+
     # ------------------------------------------------------------------
     # Render markdown similar to print_detail()
     # ------------------------------------------------------------------
     def _generate_operator_docs(self) -> None:
         parser = self.app._parser
         operators = self.app._operators
-
+        self._items: list[str] = []
         for name, op_fn in operators.items():
             md = self._render_markdown_for_operator(name, op_fn, parser)
             path = self.output_dir / f"{name}.md"
+            self._items.append(name)
             path.write_text(md, encoding="utf-8")
             print(f"[cli-docs] Generated {path}")  # noqa T201
 
